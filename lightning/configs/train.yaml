@@ -1,0 +1,21 @@
+# 학습 이름(checkpoint, wandb 업로드명)
+exp_name: 000
+# Seed
+seed: 18
+# Dice Threshold
+threshold: 0.5
+# Epoch 설정
+epoch: 100
+# 모델 컴파일(Pytorch 2.0부터 가능)
+compile: False
+
+batch_size: 16
+num_workers: 6
+make_pickle: False
+
+k-fold: True
+fold: 3
+
+defaults:
+    - model: unet-hrnet-adamw-reducelr
+    - augmentation: base

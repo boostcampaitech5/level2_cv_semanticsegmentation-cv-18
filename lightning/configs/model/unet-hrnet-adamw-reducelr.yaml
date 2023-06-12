@@ -1,0 +1,16 @@
+model:
+    _target_: segmentation_models_pytorch.Unet
+    encoder_name: tu-hrnet_w30
+    encoder_weights: imagenet
+    classes: 29
+
+optimizer:
+    _target_: torch.optim.AdamW
+    lr: 0.001
+    weight_decay: 0.0005
+
+scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    mode: min
+    factor: 0.1
+    patience: 10

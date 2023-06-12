@@ -10,9 +10,9 @@ import ray
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-IMAGE_ROOT = "/opt/ml/directory/data/train/DCM"
-LABEL_ROOT = "/opt/ml/directory/data/train/outputs_json"
-MASK_ROOT = "/opt/ml/directory/data/train/mask"
+IMAGE_ROOT = "/opt/ml/data/train/DCM"
+LABEL_ROOT = "/opt/ml/data/train/outputs_json"
+MASK_ROOT = "/opt/ml/data/train/mask"
 
 CLASSES = [
     "finger-1",

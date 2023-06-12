@@ -11,9 +11,9 @@ compile: False
 
 batch_size: 16
 num_workers: 6
-make_pickle: False
+make_pickle: True
 
-k-fold: True
+k-fold: False
 fold: 3
 
 defaults:

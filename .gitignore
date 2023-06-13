@@ -230,3 +230,6 @@ lightning/outputs/
 # checkpoints
 lightning/checkpoints/*
 !.gitkeep
+
+#config
+lightning/configs/custom_train.yaml

@@ -1,0 +1,13 @@
+model: 
+    _target_: models.components.intern_seg.InternImageSegmentation
+    classes: 29
+
+optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.001
+    weight_decay: 0.000001
+
+scheduler:
+    _target_ : torch.optim.lr_scheduler.StepLR
+    step_size : 5
+    gamma : 0.5

@@ -5,7 +5,6 @@ import hydra
 import lightning as L
 import torch.nn as nn
 import wandb
-from data.new_data_module import DataModule, NewXRayDataset, preprocessing
 from hydra.utils import instantiate
 from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint, RichProgressBar
@@ -14,8 +13,10 @@ from models.base_module import Module
 from omegaconf import DictConfig
 from sklearn.model_selection import GroupKFold
 
+from data.new_data_module import DataModule, NewXRayDataset, preprocessing
 
-@hydra.main(version_base=None, config_path="configs", config_name="train")
+
+@hydra.main(version_base=None, config_path="configs", config_name="custom_train")
 def main(cfg: DictConfig):
     L.seed_everything(cfg["seed"])
     os.makedirs(f"./checkpoints/{cfg['exp_name']}", exist_ok=True)

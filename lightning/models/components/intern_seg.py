@@ -611,7 +611,7 @@ class InternEncoder(nn.Module, EncoderMixin):
     def __init__(self, **kwargs) -> None:
         super().__init__()
         kwargs.pop("depth")
-        self._out_channels = [64, 128, 256, 512]
+        self._out_channels = kwargs.pop("out_channels")
         self._depth: int = 3
         self._in_channels: int = 3
 
@@ -624,7 +624,7 @@ class InternEncoder(nn.Module, EncoderMixin):
         self.model.load_state_dict(state_dict["model"], strict=False, **kwargs)
 
 
-def register_encoder():
+def register_encoder(depths=[4, 4, 18, 4], groups=[4, 8, 16, 32], channels=[64, 128, 256, 512]):
     smp.encoders.encoders["intern_encoder"] = {
         "encoder": InternEncoder,  # encoder class here
         "pretrained_settings": {  # pretrained 값 설정
@@ -636,16 +636,16 @@ def register_encoder():
                 "input_range": [0, 1],
             },
         },
-        "params": {"depths": [4, 4, 18, 4], "groups": [4, 8, 16, 32]},  # 기본 파라미터
+        "params": {"depths": depths, "groups": groups, "out_channels": channels},  # 기본 파라미터
     }
 
 
 class InternImageSegmentation(nn.Module):
-    def __init__(self, classes=29) -> None:
+    def __init__(self, depths=[4, 4, 18, 4], groups=[4, 8, 16, 32], channels=[64, 128, 256, 512], classes=29) -> None:
         super().__init__()
-        register_encoder()
+        register_encoder(depths, groups, channels)
         self.model = smp.PAN(
-            encoder_name="intern_encoder", encoder_weights="imagenet", encoder_output_stride=32, classes=29
+            encoder_name="intern_encoder", encoder_weights="imagenet", encoder_output_stride=32, classes=classes
         )
 
     def forward(self, x):

@@ -1,5 +1,8 @@
 model: 
     _target_: models.components.intern_seg.InternImageSegmentation
+    depths: [4, 4, 18, 4]
+    groups: [4, 8, 16, 32]
+    channels: [64, 128, 256, 512]
     classes: 29
 
 optimizer:

@@ -624,26 +624,40 @@ class InternEncoder(nn.Module, EncoderMixin):
         self.model.load_state_dict(state_dict["model"], strict=False, **kwargs)
 
 
-def register_encoder(depths=[4, 4, 18, 4], groups=[4, 8, 16, 32], channels=[64, 128, 256, 512]):
+def register_encoder(
+    depths=[4, 4, 18, 4],
+    groups=[4, 8, 16, 32],
+    channels=64,
+    out_channels=[64, 128, 256, 512],
+    weights="https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_t_1k_224.pth",
+):
     smp.encoders.encoders["intern_encoder"] = {
         "encoder": InternEncoder,  # encoder class here
         "pretrained_settings": {  # pretrained 값 설정
             "imagenet": {
                 "mean": [0.485, 0.456, 0.406],
                 "std": [0.229, 0.224, 0.225],
-                "url": "https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_t_1k_224.pth",
+                "url": weights,
                 "input_space": "RGB",
                 "input_range": [0, 1],
             },
         },
-        "params": {"depths": depths, "groups": groups, "out_channels": channels},  # 기본 파라미터
+        "params": {"depths": depths, "groups": groups, "channels": channels, "out_channels": out_channels},
     }
 
 
 class InternImageSegmentation(nn.Module):
-    def __init__(self, depths=[4, 4, 18, 4], groups=[4, 8, 16, 32], channels=[64, 128, 256, 512], classes=29) -> None:
+    def __init__(
+        self,
+        depths=[4, 4, 18, 4],
+        groups=[4, 8, 16, 32],
+        channels=64,
+        out_channels=[64, 128, 256, 512],
+        classes=29,
+        weights="https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_t_1k_224.pth",
+    ) -> None:
         super().__init__()
-        register_encoder(depths, groups, channels)
+        register_encoder(depths, groups, channels, out_channels, weights)
         self.model = smp.PAN(
             encoder_name="intern_encoder", encoder_weights="imagenet", encoder_output_stride=32, classes=classes
         )

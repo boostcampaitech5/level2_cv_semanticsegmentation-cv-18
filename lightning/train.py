@@ -16,7 +16,7 @@ from sklearn.model_selection import GroupKFold
 from data.new_data_module import DataModule, NewXRayDataset, preprocessing
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="custom_train")
+@hydra.main(version_base="1.3", config_path="configs", config_name="custom_train")
 def main(cfg: DictConfig):
     L.seed_everything(cfg["seed"])
     os.makedirs(f"./checkpoints/{cfg['exp_name']}", exist_ok=True)

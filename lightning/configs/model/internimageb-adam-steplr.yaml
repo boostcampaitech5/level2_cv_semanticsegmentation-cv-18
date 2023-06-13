@@ -1,8 +1,10 @@
 model: 
     _target_: models.components.intern_seg.InternImageSegmentation
-    depths: [4, 4, 18, 4]
-    groups: [4, 8, 16, 32]
-    channels: [64, 128, 256, 512]
+    depths: [4, 4, 21, 4]
+    groups: [7, 14, 28, 56]
+    channels: 112
+    out_channels: [112, 224, 448, 896]
+    weights: https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_b_1k_224.pth
     classes: 29
 
 optimizer:

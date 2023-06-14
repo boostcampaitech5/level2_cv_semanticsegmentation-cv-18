@@ -229,7 +229,9 @@ lightning/outputs/
 
 # checkpoints
 lightning/checkpoints/*
+lightning/semantic-segmentation
 !.gitkeep
 
 #config
 lightning/configs/custom_train.yaml
+

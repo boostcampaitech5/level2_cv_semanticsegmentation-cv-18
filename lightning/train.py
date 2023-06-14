@@ -4,15 +4,16 @@ import albumentations as A
 import hydra
 import lightning as L
 import torch.nn as nn
-import wandb
 from hydra.utils import instantiate
 from lightning import Trainer
-from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint, RichProgressBar
+from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, RichProgressBar
 from lightning.pytorch.loggers import WandbLogger
 from models.base_module import Module
+from models.components.upernet2 import UperNetSeg
 from omegaconf import DictConfig
 from sklearn.model_selection import GroupKFold
 
+import wandb
 from data.new_data_module import DataModule, NewXRayDataset, preprocessing
 
 
@@ -38,21 +39,14 @@ def main(cfg: DictConfig):
 
         datamodule = DataModule(train_dataset, valid_dataset, cfg)
 
-        model = instantiate(cfg["model"]["model"])
+        # model = instantiate(cfg["model"]["model"])
+        model = UperNetSeg()
         criterion = nn.BCEWithLogitsLoss()
-        module = Module(model, criterion, cfg)
+        module = Module(model, criterion, cfg, fold_idx)
         exp_name = cfg["exp_name"] if fold_idx == 0 else f"{cfg['exp_name']}-{fold_idx}"
         logger = [WandbLogger(project="semantic-segmentation", name=f"{exp_name}", entity="cv-18", config=cfg)]
         callbacks = [
             RichProgressBar(),
-            ModelCheckpoint(
-                f"./checkpoints/{cfg['exp_name']}",
-                "best",
-                monitor="Valid Dice",
-                mode="max",
-                save_last=True,
-                save_weights_only=True,
-            ),
             LearningRateMonitor(logging_interval="epoch"),
             EarlyStopping(monitor="Valid Dice", patience=10, mode="max"),
         ]

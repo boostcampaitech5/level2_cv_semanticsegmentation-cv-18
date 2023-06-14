@@ -3,9 +3,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import wandb
 from hydra.utils import instantiate
 from lightning import LightningModule
+
+import wandb
 
 CLASSES = [
     "finger-1",
@@ -83,7 +84,7 @@ def label2rgb(label):
 
 
 class Module(LightningModule):
-    def __init__(self, model: nn.Module, criterion: nn.Module, cfg: dict) -> None:
+    def __init__(self, model: nn.Module, criterion: nn.Module, cfg: dict, fold_idx: int) -> None:
         super().__init__()
         self.model = model
         self.criterion = criterion
@@ -91,6 +92,8 @@ class Module(LightningModule):
         self.train_dice = []
         self.valid_dice = []
         self.val_batch = None
+        self.fold_idx = fold_idx
+        self.ex_val_dice = 0
 
     def dice_coef(self, y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
         y_true_f = y_true.flatten(2).cuda()
@@ -172,6 +175,16 @@ class Module(LightningModule):
             plt.close()
             images = []
             self.val_batch = None
+
+            if torch.mean(valid_dice).item() > self.ex_val_dice:
+                print(
+                    f"Best Dice Coefficient Renewal! ({self.ex_val_dice:.3f} -> {torch.mean(valid_dice).item():.3f})\n"
+                )
+                torch.save(
+                    self.model,
+                    f"./checkpoints/{self.cfg['exp_name']}/best-{self.fold_idx}fold.pt",
+                )
+                self.ex_val_dice = torch.mean(valid_dice).item()
 
         self.train_dice = []
         self.valid_dice = []

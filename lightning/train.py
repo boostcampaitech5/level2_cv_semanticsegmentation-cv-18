@@ -9,7 +9,6 @@ from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, RichProgressBar
 from lightning.pytorch.loggers import WandbLogger
 from models.base_module import Module
-from models.components.upernet2 import UperNetSeg
 from omegaconf import DictConfig
 from sklearn.model_selection import GroupKFold
 
@@ -39,8 +38,7 @@ def main(cfg: DictConfig):
 
         datamodule = DataModule(train_dataset, valid_dataset, cfg)
 
-        # model = instantiate(cfg["model"]["model"])
-        model = UperNetSeg()
+        model = instantiate(cfg["model"]["model"])
         criterion = nn.BCEWithLogitsLoss()
         module = Module(model, criterion, cfg, fold_idx)
         exp_name = cfg["exp_name"] if fold_idx == 0 else f"{cfg['exp_name']}-{fold_idx}"

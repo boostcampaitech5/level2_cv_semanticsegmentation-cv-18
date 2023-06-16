@@ -79,12 +79,18 @@ class XrayInferenceDataset(Dataset):
         image_path = os.path.join(IMAGE_ROOT, image_name)
 
         image = cv2.imread(image_path)
+        
+        #####
+        # image = np.asarray(image, dtype=np.uint8)
         image = image/255.
 
         if self.transforms is not None:
             inputs = {"image": image}
             result = self.transforms(**inputs)
             image = result["image"]
+        
+        ####
+        # image = image/255.
 
         image = image.transpose(2, 0, 1)
 
@@ -124,7 +130,12 @@ def inference(saved_dir, args):
     
     model = torch.load(os.path.join(saved_dir, f"{args.exp_name}_best_model.pt"))
 
-    tf = A.Resize(512, 512)
+    # tf = A.Resize(1024, 1024)
+    tf = A.Compose([
+        A.Resize(1024, 1024),
+        # A.CLAHE(clip_limit=4, p=1.0)
+    ]) 
+
 
     test_dataset = XrayInferenceDataset(transforms=tf)
     test_loader = DataLoader(dataset=test_dataset, batch_size=2, shuffle=False, num_workers=2, drop_last=False)
@@ -154,7 +165,7 @@ def inference(saved_dir, args):
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
 
-    df.to_csv(f"../inference/{args.exp_name}_output.csv", index=False)
+    df.to_csv(f"../inference/TTAclahe_{args.exp_name}_output.csv", index=False)
 
 
 

@@ -2,7 +2,9 @@ import segmentation_models_pytorch as smp
 
 
 def init_models(model, encoder):
-    if encoder == 'r101':
+    if encoder == 'r152':
+        encoder = 'resnet152'
+    elif encoder == 'r101':
         encoder = 'resnet101'
     elif encoder == 'r50':
         encoder = 'resnet50'

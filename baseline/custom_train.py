@@ -64,6 +64,7 @@ def validation(epoch, model, data_loader, criterion, wandb_off, thr=0.5):
             
             dice = dice_coef(outputs, masks)
             dices.append(dice)
+
                 
     dices = torch.cat(dices, 0)
     dices_per_class = torch.mean(dices, 0)
@@ -134,7 +135,6 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
                 loss.backward()
                 optimizer.step()
             
-            end = time.time()
             
             if (step + 1) % 25 == 0:
                 print(
@@ -181,20 +181,22 @@ def main(saved_dir, args):
             entity='cv-18',
             name=f'{args.exp_name}',
 
-            # config = {
-            #     "learning_rate" : args.lr,
-            #     "optimizer" : args.optimizer,
-            #     "loss" : args.loss,
-            #     "batch_size" : args.batch_size,
-            #     "epochs" : args.max_epoch 
-            # }
+            config = {
+                "learning_rate" : args.learning_rate,
+                # "optimizer" : args.optimizer,
+                # "loss" : args.loss,
+                # "batch_size" : args.batch_size,
+                # "epochs" : args.max_epoch 
+            }
         )
     
+    ################# Cutmix 적용시 ################
     if args.aug == 'cutmix':
         tf_train = init_transform('base')
     else: 
         tf_train = init_transform(args.aug) 
-    tf_val = init_transform('base') # A.Resize(512, 512)
+
+    tf_val = init_transform('base2') # A.Resize(512, 512)
     
     train_dataset = XRayDataset(is_train=True, transforms=tf_train)
     valid_dataset = XRayDataset(is_train=False, transforms=tf_val)
@@ -227,7 +229,7 @@ def parse_args():
     parser = ArgumentParser()
 
     # Conventional args
-    parser.add_argument("--exp_name", type=str, default="303_deeplabv3_r101")
+    parser.add_argument("--exp_name", type=str, default="318_deeplabv3plus_r101_dice_resize1024")
     parser.add_argument("--wandb_off", default=None) # None -> wandb on , True -> wandb off
 
     parser.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
@@ -236,8 +238,8 @@ def parse_args():
     parser.add_argument('--model', type=str, default='deeplabv3')
     parser.add_argument('--encoder', type=str, default='r101')
     parser.add_argument('--optimizer', type=str, default='Adam')
-    parser.add_argument('--loss', type=str, default='BCE')
-    parser.add_argument('--aug', type=str, default='base')
+    parser.add_argument('--loss', type=str, default='dice')
+    parser.add_argument('--aug', type=str, default='base2')
     parser.add_argument('--lr_scheduler', default=None) # 'CosineAnnealingLR'
 
     parser.add_argument('--num_workers', type=int, default=8)

@@ -1,9 +1,11 @@
 import os
+import warnings
 
 import albumentations as A
 import hydra
 import lightning as L
 import torch.nn as nn
+from albumentations.pytorch import ToTensorV2
 from hydra.utils import instantiate
 from lightning import Trainer
 from lightning.pytorch.callbacks import EarlyStopping, LearningRateMonitor, RichProgressBar
@@ -14,6 +16,8 @@ from sklearn.model_selection import GroupKFold
 
 import wandb
 from data.new_data_module import DataModule, NewXRayDataset, preprocessing
+
+warnings.filterwarnings("ignore")
 
 
 @hydra.main(version_base="1.3", config_path="configs", config_name="custom_train")
@@ -31,14 +35,15 @@ def main(cfg: DictConfig):
         train_data = (pngs[train_idx], pkls[train_idx])
         valid_data = (pngs[valid_idx], pkls[valid_idx])
 
-        transforms = A.Compose([instantiate(aug) for _, aug in cfg["augmentation"].items()])
-
+        transforms = [instantiate(aug) for _, aug in cfg["augmentation"].items()]
+        transforms.append(ToTensorV2(True))
+        transforms = A.Compose(transforms)
         train_dataset = NewXRayDataset(train_data, train=True, transforms=transforms)
         valid_dataset = NewXRayDataset(valid_data, train=True, transforms=transforms)
 
         datamodule = DataModule(train_dataset, valid_dataset, cfg)
 
-        model = instantiate(cfg["model"]["model"])
+        model = instantiate(cfg["model"])
         criterion = nn.BCEWithLogitsLoss()
         module = Module(model, criterion, cfg, fold_idx)
         exp_name = cfg["exp_name"] if fold_idx == 0 else f"{cfg['exp_name']}-{fold_idx}"

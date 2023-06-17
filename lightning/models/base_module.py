@@ -104,9 +104,9 @@ class Module(LightningModule):
         return (2.0 * intersection + eps) / (torch.sum(y_true_f, -1) + torch.sum(y_pred_f, -1) + eps)
 
     def configure_optimizers(self):
-        optimizer = instantiate(self.cfg["model"]["optimizer"], params=self.parameters())
-        if self.cfg["model"]["scheduler"] is not None:
-            scheduler = instantiate(self.cfg["model"]["scheduler"], optimizer=optimizer)
+        optimizer = instantiate(self.cfg["optimizer"], params=self.parameters())
+        if self.cfg["scheduler"] is not None:
+            scheduler = instantiate(self.cfg["scheduler"], optimizer=optimizer)
             return {
                 "optimizer": optimizer,
                 "lr_scheduler": {"scheduler": scheduler, "name": "lr", "monitor": "Valid Dice"},
@@ -115,6 +115,7 @@ class Module(LightningModule):
 
     def training_step(self, batch: torch.Tensor, batch_idx: int):
         image, mask = batch
+        image, mask = image.float(), mask.float()
 
         output = self.model(image)
         loss = self.criterion(output, mask)
@@ -128,6 +129,7 @@ class Module(LightningModule):
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int):
         image, mask = batch
+        image, mask = image.float(), mask.float()
 
         output = self.model(image)
         output_h, output_w = output.size(-2), output.size(-1)

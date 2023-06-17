@@ -7,7 +7,6 @@ import cv2
 import lightning as L
 import numpy as np
 import ray
-import torch
 from torch.utils.data import DataLoader, Dataset
 
 IMAGE_ROOT = "/opt/ml/data/train/DCM"
@@ -105,11 +104,11 @@ class NewXRayDataset(Dataset):
             label = result["mask"] if self.train else label
 
         # to tenser will be done later
-        image = image.transpose(2, 0, 1)  # make channel first
-        label = label.transpose(2, 0, 1)
+        # image = image.transpose(2, 0, 1)  # make channel first
+        # label = label.transpose(2, 0, 1)
 
-        image = torch.from_numpy(image).float()
-        label = torch.from_numpy(label).float()
+        # image = torch.from_numpy(image).float()
+        # label = torch.from_numpy(label).float()
 
         return image, label
 
@@ -136,7 +135,7 @@ class DataModule(L.LightningDataModule):
             batch_size=self.cfg["batch_size"],
             shuffle=False,
             pin_memory=True,
-            num_workers=4,
+            num_workers=self.cfg["num_workers"],
         )
 
 

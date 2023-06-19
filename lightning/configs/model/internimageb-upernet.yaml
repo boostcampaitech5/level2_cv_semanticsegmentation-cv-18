@@ -1,4 +1,4 @@
-_target_: models.components.upernet_intern.UperNet
+_target_: models.components.upernet_intern.InternUPerNet
 depths: [4, 4, 21, 4]
 groups: [7, 14, 28, 56]
 channels: 112

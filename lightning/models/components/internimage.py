@@ -646,15 +646,15 @@ def register_encoder(
     }
 
 
-class InternImageSegmentation(nn.Module):
+class InternImagePAN(nn.Module):
     def __init__(
         self,
-        depths=[4, 4, 18, 4],
-        groups=[4, 8, 16, 32],
-        channels=64,
-        out_channels=[64, 128, 256, 512],
+        depths=[4, 4, 21, 4],
+        groups=[7, 14, 28, 56],
+        channels=112,
+        out_channels=[112, 224, 448, 896],
         classes=29,
-        weights="https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_t_1k_224.pth",
+        weights="https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_b_1k_224.pth",
     ) -> None:
         super().__init__()
         register_encoder(depths, groups, channels, out_channels, weights)

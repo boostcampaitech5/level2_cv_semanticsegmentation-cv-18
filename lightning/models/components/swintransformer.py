@@ -709,3 +709,21 @@ class SwinTransformerPAN(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+
+class SwinTransformerFPN(nn.Module):
+    def __init__(
+        self,
+    ) -> None:
+        super().__init__()
+        register_encoder()
+        self.model = smp.FPN(
+            encoder_name="swin_encoder",
+            encoder_weights="imagenet",
+            decoder_pyramid_channels=128,
+            in_channels=3,
+            classes=29,
+        )
+
+    def forward(self, x):
+        return self.model(x)

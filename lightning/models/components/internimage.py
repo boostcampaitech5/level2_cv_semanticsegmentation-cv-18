@@ -666,6 +666,30 @@ class InternImagePAN(nn.Module):
         return self.model(x)
 
 
+class InternImageFPN(nn.Module):
+    def __init__(
+        self,
+        depths=[4, 4, 21, 4],
+        groups=[7, 14, 28, 56],
+        channels=112,
+        out_channels=[112, 224, 448, 896],
+        classes=29,
+        weights="https://huggingface.co/OpenGVLab/InternImage/resolve/main/internimage_b_1k_224.pth",
+    ) -> None:
+        super().__init__()
+        register_encoder(depths, groups, channels, out_channels, weights)
+        self.model = smp.FPN(
+            encoder_name="intern_encoder",
+            encoder_weights="imagenet",
+            decoder_pyramid_channels=112,
+            in_channels=3,
+            classes=classes,
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+
 if __name__ == "__main__":
     x = torch.randn((8, 3, 512, 512), device="cuda")
     register_encoder()

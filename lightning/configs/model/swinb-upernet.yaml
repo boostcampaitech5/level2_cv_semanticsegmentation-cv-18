@@ -1,4 +1,4 @@
-_target_: models.components.upernet_swin.InternSwinTransformer
+_target_: models.components.upernet_swin.SwinTransformerUPerNet
 pretrain_img_size: 384
 embed_dim: 128
 depths: [2, 2, 18, 2]

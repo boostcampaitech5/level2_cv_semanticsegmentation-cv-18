@@ -5,7 +5,7 @@ from .swintransformer import SwinTransformer
 from .upernet import UPerNet
 
 
-class InternSwinTransformer(nn.Module):
+class SwinTransformerUPerNet(nn.Module):
     def __init__(
         self,
         pretrain_img_size=384,

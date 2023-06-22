@@ -1,0 +1,3 @@
+_target_: segmentation_models_pytorch.DeepLabV3Plus
+encoder_name: resnet101
+classes: 29

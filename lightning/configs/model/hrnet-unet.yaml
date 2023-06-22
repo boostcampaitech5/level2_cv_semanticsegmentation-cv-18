@@ -1,0 +1,4 @@
+_target_: segmentation_models_pytorch.Unet
+encoder_name: tu-hrnet_w30
+encoder_weights: imagenet
+classes: 29

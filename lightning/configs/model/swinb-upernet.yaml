@@ -1,0 +1,8 @@
+_target_: models.components.upernet_swin.SwinTransformerUPerNet
+pretrain_img_size: 384
+embed_dim: 128
+depths: [2, 2, 18, 2]
+num_heads: [4, 8, 16, 32]
+window_size: 12
+out_channels: [128, 256, 512, 1024]
+weights: https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_base_patch4_window12_384_22k.pth

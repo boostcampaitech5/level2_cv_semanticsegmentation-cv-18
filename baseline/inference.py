@@ -10,8 +10,12 @@ import albumentations as A
 
 import numpy as np
 import pandas as pd
+import ttach as tta
+
 # visualization
 import matplotlib.pyplot as plt
+
+from dataset import init_transform
 
 
 CLASSES = [
@@ -126,23 +130,34 @@ def test(model, data_loader, thr=0.5):
         return rles, filename_and_class
 
 
-def inference(saved_dir, args):
+def inference(saved_dir, exp_name):
     
-    model = torch.load(os.path.join(saved_dir, f"{args.exp_name}_best_model.pt"))
+    model = torch.load(os.path.join(saved_dir, f"{exp_name}_best_model.pt"))
 
-    # tf = A.Resize(1024, 1024)
-    tf = A.Compose([
-        A.Resize(1024, 1024),
-        # A.CLAHE(clip_limit=4, p=1.0)
-    ]) 
+    tf = init_transform('base2') #A.Resize(512, 512)
+    # tf = A.Compose([
+    #     A.Resize(1024, 1024),
+    #     A.CLAHE(clip_limit=4, p=0.5),
+    #     A.RandomBrightnessContrast(),
+    # ]) 
 
+
+    ############## TTA #############
+    # transform = tta.Compose([
+    #     # tta.HorizontalFlip(),
+    #     tta.Rotate90(angles=[0,90]),
+    #     # tta.Scale()
+    #     # tta.Multiply(factors=[0.9, 1, 1.1])
+    # ])
+
+    # tta_model = tta.SegmentationTTAWrapper(model, transform)
+    ########################################
 
     test_dataset = XrayInferenceDataset(transforms=tf)
     test_loader = DataLoader(dataset=test_dataset, batch_size=2, shuffle=False, num_workers=2, drop_last=False)
 
+    
     rles, filename_and_class = test(model, test_loader)
-
-    # image = cv2.imread(os.path.join(IMAGE_ROOT, filename_and_class[0].split("_")[1]))
 
     preds = []
     for rle in rles[:len(CLASSES)]:
@@ -165,8 +180,12 @@ def inference(saved_dir, args):
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
 
-    df.to_csv(f"../inference/TTAclahe_{args.exp_name}_output.csv", index=False)
+    df.to_csv(f"../inference/{exp_name}_output.csv", index=False) #TTA
 
 
-
+# if __name__=='__main__':
+#     exp_name = '344_unet2plus_r152_Adam_dicefocal_bright_1e-3_CosineAnnealingLR_resized1024'
+#     saved_dir = f'../checkpoints/result_{exp_name}'
+    
+#     inference(saved_dir, exp_name)
 

@@ -1,4 +1,9 @@
+import torch.nn as nn
+import torch.nn.functional as F
+
 import segmentation_models_pytorch as smp
+from hrnet.hrnet_ocr import get_seg_model
+import yaml
 
 
 def init_models(model, encoder):
@@ -9,9 +14,10 @@ def init_models(model, encoder):
     elif encoder == 'r50':
         encoder = 'resnet50'
     elif encoder == 'effb3':
-        encoder = 'efficientnet_b3'
+        encoder = 'efficientnet-b3'
     elif encoder == 'effb5':
         encoder = 'efficientnet-b5'
+    
     else:
         encoder = encoder
     
@@ -27,6 +33,9 @@ def init_models(model, encoder):
                     classes = 29
                 )
     
+    elif model == 'hrnetocr':
+        model = HRNetOCR()
+
     elif model == "deeplabv3":
         model = smp.DeepLabV3(
                     encoder_name = encoder,
@@ -43,6 +52,14 @@ def init_models(model, encoder):
                     classes = 29
                 )
     
+    elif model == "unet":
+        model = smp.Unet(
+                    encoder_name = encoder,
+                    encoder_weights = 'imagenet',
+                    in_channels = 3,
+                    classes = 29
+                )
+        
     elif model == "pspnet":
         model = smp.PSPNet(
                     encoder_name = encoder,
@@ -52,6 +69,34 @@ def init_models(model, encoder):
                 )
     
     return model
+
+
+
+
+class HRNetOCR(nn.Module):
+    def __init__(self, num_classes = 29, target_size = 1024):
+
+        super().__init__()
+        self.num_classes = num_classes
+        self.w, self.h = target_size, target_size
+
+        with open("./hrnet/hrnet_config/hrnet_ocr_w48.yaml", "r") as f:
+            cfg = yaml.safe_load(f)
+
+        self.model = get_seg_model(cfg)
+    
+    def forward(self, x):
+        
+        if self.training:
+            x = self.model(x)
+            x = [F.interpolate(input = x_, size = (self.w, self.h), mode = "bilinear", align_corners = True) for x_ in x]
+            return x
+
+        else:
+            x = self.model(x)
+            x = F.interpolate(input = x[0], size = (self.w, self.h), mode = "bilinear", align_corners = True)
+        return x
+
 
 
 

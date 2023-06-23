@@ -26,7 +26,7 @@ from argparse import ArgumentParser
 
 # baseline
 from utils import dice_coef, save_model, set_seed, AverageMeter
-from dataset import XRayDataset, init_transform, CutMixCollator, CutMixCriterion
+from dataset import XRayDataset, XRayTrainDataset, init_transform, CutMixCollator, CutMixCriterion
 from model import init_models
 from inference import inference
 from loss import init_loss
@@ -75,6 +75,7 @@ def validation(epoch, model, data_loader, criterion, wandb_off, thr=0.5):
     dice_str = "\n".join(dice_str)
     print(dice_str)
 
+    # log dice score per classes
     if not wandb_off:
         wandb.log(
             {
@@ -115,9 +116,10 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
                 masks = masks.cuda()
 
             model = model.cuda()
-            
-            ###### mixed precision ######
+
             optimizer.zero_grad()
+
+            ###### mixed precision ######
             if mixed:
                 with torch.cuda.amp.autocast(enabled=use_amp):
                     outputs = model(images)
@@ -129,11 +131,16 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
             
             else:
                 outputs = model(images)
+                ########### HRNetOCR #########
+                if isinstance(outputs, list):
+                    outputs = outputs[1]
+                ##############################
 
                 loss = train_criterion(outputs, masks)
-                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+            
+            
             
             
             if (step + 1) % 25 == 0:
@@ -180,39 +187,25 @@ def main(saved_dir, args):
             project='semantic-segmentation',
             entity='cv-18',
             name=f'{args.exp_name}',
-
-            config = {
-                "learning_rate" : args.learning_rate,
-                # "optimizer" : args.optimizer,
-                # "loss" : args.loss,
-                # "batch_size" : args.batch_size,
-                # "epochs" : args.max_epoch 
-            }
         )
     
-    ################# Cutmix 적용시 ################
-    if args.aug == 'cutmix':
-        tf_train = init_transform('base')
-    else: 
-        tf_train = init_transform(args.aug) 
-
-    tf_val = init_transform('base2') # A.Resize(512, 512)
+    tf_train = init_transform(args.aug) 
+    tf_val = init_transform('base2') 
     
-    train_dataset = XRayDataset(is_train=True, transforms=tf_train)
+    ################# if copy paste ##############
+    if args.copypaste:
+        train_dataset = XRayTrainDataset(is_train=True, transforms=tf_train, k=args.k)
+        print(f'Copy Paste applied : {args.copypaste}, k : {args.k}')
+    else:
+        train_dataset = XRayDataset(is_train=True, transforms=tf_train) 
     valid_dataset = XRayDataset(is_train=False, transforms=tf_val)
 
+    train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, drop_last=True)
     valid_loader = DataLoader(dataset=valid_dataset, batch_size=2, shuffle=False, num_workers=args.val_num_workers, drop_last=False)
 
-    if args.aug == 'cutmix':
-        collator = CutMixCollator(alpha=1.0)
-        train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=collator, num_workers=args.num_workers, drop_last=True)
-        train_criterion = CutMixCriterion(reduction='mean')
-    else:
-        train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, drop_last=True)
-        train_criterion = init_loss(args.loss)
-    
     model = init_models(args.model, args.encoder)
 
+    train_criterion = init_loss(args.loss)
     val_criterion = init_loss(args.loss)
 
     optimizer = __import__('torch.optim', fromlist='optim').__dict__[args.optimizer](model.parameters(), lr=args.learning_rate)
@@ -234,6 +227,8 @@ def parse_args():
 
     parser.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
     parser.add_argument('--mixed', default=None) # mixed precision
+    parser.add_argument('--copypaste', default=True) # copypaste augmentation
+    parser.add_argument('--k', type=int, default=3)
 
     parser.add_argument('--model', type=str, default='deeplabv3')
     parser.add_argument('--encoder', type=str, default='r101')
@@ -271,4 +266,4 @@ if __name__=='__main__':
     ]
 
     main(saved_dir, args)
-    inference(saved_dir, args)
+    inference(saved_dir, args.exp_name)

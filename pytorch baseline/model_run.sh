@@ -1,15 +1,15 @@
-num=319
-model_list='deeplabv3plus' # pspnet' #deeplabv3  
-encoder_list='r101' #effb5 r151' # effb3 effb5 r151'
+num=350
+model_list='hrnetocr' #deeplabv3plus' #unet2plus' #hrnetocr' #unet2plus' #deeplabv3plus' #hrnetocr' #deeplabv3plus' #unet2plus' # pspnet' #deeplabv3  
+encoder_list=None #r152' #r101' #effb5 ' # effb3'
 opt_list='Adam' # AdamW' # SGD'
-loss_list='dice' # tversky softBCE' # BCE'
-aug_list='clahe1' #clahe1 clahe2' # clahe centercrop2' #centercrop2' # base  center_empty' # center_grid gridmask cropnonempty grid_empty'
-sch_list=None #'CosineAnnealingLR' # StepLR'
+loss_list='dice' #dicefocal' # ' # tversky softBCE' # BCE'
+aug_list='base2' # brightclaherotate' #brightclahe' # bright2' # base2' #clahe2 bright2' # clahe3 bright2' # brightclahe' # clahe4 bright rotate  clahe1 clahe2' # clahe centercrop2' #centercrop2' # base  center_empty' # center_grid gridmask cropnonempty grid_empty'
+sch_list=None # 'CosineAnnealingLR' # StepLR'
 
-num_workers=4
+num_workers=2
 batch_size=4
-learning_rate='1e-4'
-max_epoch='50'
+learning_rate='1e-3'
+max_epoch='25'
 
 
 for model in $model_list
@@ -27,10 +27,11 @@ do
                         for epoch in $max_epoch
                         do
                             echo "exp_num:$num , model:$model, encoder:$encoder, opt:$opt, loss:$loss, aug:$aug, lr_scheduler: $sch" #, mixed:True" #
-                            exp_name="${num}_${model}_${encoder}_${opt}_${loss}_${aug}_${sch}_resize1024" #_mixed" #_${lr}" # 
+                            exp_name="${num}_${model}_${encoder}_${opt}_${loss}_${aug}_${learning_rate}_resized1024" #_${sch}_copypaste(k=9)" #_${sch}" #_mixed" #_${lr}" # 
 
                             python custom_train.py\
                             --exp_name $exp_name\
+                            --k 9\
                             --model $model\
                             --encoder $encoder\
                             --optimizer $opt\
@@ -50,3 +51,4 @@ do
     done
 done
 
+#                            --lr_scheduler $sch\

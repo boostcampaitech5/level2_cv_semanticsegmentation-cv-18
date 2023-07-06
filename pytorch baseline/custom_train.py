@@ -25,8 +25,8 @@ from torchvision import models
 from argparse import ArgumentParser
 
 # baseline
-from utils import dice_coef, save_model, set_seed, AverageMeter
-from dataset import XRayDataset, XRayTrainDataset, init_transform, CutMixCollator, CutMixCriterion
+from utils import dice_coef, save_model, set_seed
+from dataset import XRayDataset, XRayTrainDataset, init_transform
 from model import init_models
 from inference import inference
 from loss import init_loss
@@ -64,7 +64,6 @@ def validation(epoch, model, data_loader, criterion, wandb_off, thr=0.5):
             
             dice = dice_coef(outputs, masks)
             dices.append(dice)
-
                 
     dices = torch.cat(dices, 0)
     dices_per_class = torch.mean(dices, 0)
@@ -91,7 +90,6 @@ def validation(epoch, model, data_loader, criterion, wandb_off, thr=0.5):
 
 def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_every, train_criterion, val_criterion, optimizer, lr_scheduler, wandb_off, mixed):
     print(f'Start training..')
-    data_time = AverageMeter()
     n_class = len(CLASSES)
     best_dice = 0.
     
@@ -103,12 +101,10 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
     for epoch in range(max_epoch):
         model.train()
 
-        for step, (images, masks) in enumerate(data_loader):   
-            data_time.update(time.time() - end)
-         
-            # images, masks = images.cuda(), masks.cuda()
+        for step, (images, masks) in enumerate(data_loader):            
             images = images.cuda()
 
+            # for HRNetOCR
             if isinstance(masks, (tuple, list)):
                 masks1, masks2, lam = masks
                 masks = (masks1.cuda(), masks2.cuda(), lam)
@@ -116,7 +112,6 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
                 masks = masks.cuda()
 
             model = model.cuda()
-
             optimizer.zero_grad()
 
             ###### mixed precision ######
@@ -140,16 +135,12 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
                 loss.backward()
                 optimizer.step()
             
-            
-            
-            
             if (step + 1) % 25 == 0:
                 print(
                     f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | '
                     f'Epoch [{epoch+1}/{max_epoch}], '
                     f'Step [{step+1}/{len(data_loader)}], '
                     f'Loss: {round(loss.item(),4)},'
-                    f'Data Time: {data_time.avg}'
                 )
 
                 if not wandb_off:
@@ -180,6 +171,7 @@ def train(saved_dir, exp_name, max_epoch, model, data_loader, val_loader, val_ev
 
 
 def main(saved_dir, args):
+
     set_seed()
 
     if not args.wandb_off:
@@ -190,7 +182,7 @@ def main(saved_dir, args):
         )
     
     tf_train = init_transform(args.aug) 
-    tf_val = init_transform('base2') 
+    tf_val = init_transform('base2') #(1024,1024)
     
     ################# if copy paste ##############
     if args.copypaste:
@@ -204,14 +196,12 @@ def main(saved_dir, args):
     valid_loader = DataLoader(dataset=valid_dataset, batch_size=2, shuffle=False, num_workers=args.val_num_workers, drop_last=False)
 
     model = init_models(args.model, args.encoder)
-
     train_criterion = init_loss(args.loss)
     val_criterion = init_loss(args.loss)
-
     optimizer = __import__('torch.optim', fromlist='optim').__dict__[args.optimizer](model.parameters(), lr=args.learning_rate)
 
-    if args.lr_scheduler is not None:
-        lr_scheduler = __import__('torch.optim.lr_scheduler', fromlist='lr_scheduler').__dict__[args.lr_scheduler](optimizer, T_max=args.max_epoch)
+    if args.lr_scheduler == 'CosineAnnealingLR':
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.max_epoch)
     else:
         lr_scheduler = None
 
